@@ -1,0 +1,68 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    tags:
+      - 'v*' # Workflow sẽ tự chạy khi bạn push 1 tag (vd: git tag v1.0.0 && git push --tags)
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tên phiên bản (tag), ví dụ: v1.0.0'
+        required: true
+        default: 'latest'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: # Danh sách các service cần build trong hệ thống
+        service: 
+          - core-api
+          - mqtt-transport
+          - notification-service
+          # - sensing-service
+    
+    steps:
+      # Step 1: Clone code từ repository Private
+      - name: Checkout private repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.PRIVATE_REPO }}
+          token: ${{ secrets.PAT_TOKEN }}
+          
+      # Step 2: Cài đặt môi trường build Docker
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      # Step 3: Đăng nhập vào Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      # Step 4: Khai báo định dạng Tag
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/keemos
+          tags: |
+            # Gắn tag theo format {service_name}-{version}
+            # Nếu chạy bằng trigger tay (workflow_dispatch) nó sẽ dùng bản version nhập vào
+            # Nếu chạy push tag nó sẽ lấy tên tag đó (github.ref_name)
+            type=raw,value=${{ matrix.service }}-${{ github.event.inputs.version || github.ref_name }}
+            
+      # Step 5: Build và Push image lên Docker Hub
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          # Mặc định file dockerfile sẽ ở ./{service_name}/Dockerfile
+          file: ./${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
