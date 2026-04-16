@@ -1,0 +1,32 @@
+name: Quality and Security
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 0'
+
+jobs:
+  lint:
+    name: Super-Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run super-linter
+        uses: github/super-linter@v5
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_working_directory: .
+          validate_all_codebases: true
+          enable_docker: true
+          enable_yaml: true
+          enable_yml: true
+          enable_json: true
+          enable_markdown: true
+          disable_errors: false
