@@ -47,7 +47,7 @@ jobs:
       # Step 4: Khai báo định dạng Tag
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/keemos
           tags: |
