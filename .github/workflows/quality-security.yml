@@ -21,7 +21,7 @@ jobs:
       - name: Run super-linter
         uses: github/super-linter@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT_TOKEN }}
           default_working_directory: .
           validate_all_codebases: true
           enable_docker: true
