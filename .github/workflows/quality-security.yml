@@ -1,5 +1,10 @@
 name: Quality and Security
 
+permissions:
+  contents: read
+  statuses: write
+  checks: write
+
 on:
   push:
     branches:
@@ -15,7 +20,7 @@ jobs:
     name: Super-Linter
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -23,7 +28,7 @@ jobs:
       - name: Run super-linter
         uses: github/super-linter@v7
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           default_working_directory: .
           validate_all_codebases: true
           enable_docker: true
